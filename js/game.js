@@ -25,10 +25,12 @@ data = ["6|6|111111100501121111101999141999111999",
 M = N = size = XX = YY = xPanda = yPanda = -1;
 A = [];
 im = [];
-for (let i = 0; i < 7; i++) {
+for (let i = 0; i < 9; i++) {
     im[i] = new Image();
     im[i].src = "images/" + i + ".png";
 }
+// Hướng nhân vật
+vx = "right";
 
 reload_Im = new Image();
 reload_Im.src = "images/reload.png";
@@ -51,9 +53,10 @@ class game {
         this.canvas = document.createElement("canvas");
         this.context = this.canvas.getContext("2d");
         document.body.appendChild(this.canvas);
-        if (this.getCookie("level") != "") {
-            level = Math.floor(this.getCookie("level"));
-            score = Math.floor(this.getCookie("score"));
+        if (Math.floor(this.getLocalStorage("level")) >= 0) {
+            level = Math.floor(this.getLocalStorage("level") || 0);
+            score = Math.floor(this.getLocalStorage("score") || 0);
+            console.log(level, ' ', score);
         }
 
         this.render();
@@ -66,8 +69,10 @@ class game {
     }
 
     setUp(str) {
-        this.setCookie("level", level, 7);
-        this.setCookie("score", score, 7);
+        this.setLocalStorage("level", level, 7);
+        this.setLocalStorage("score", score, 7);
+        console.log(level, ' @ ', score);
+        vx = "right";
         count = countWin = -1;
         Score2 = 200;
         let s = str.split("|");
@@ -193,6 +198,9 @@ class game {
                 case 65:
                     // console.log("Left");
                     this.movePanda(0, -1);
+                    vx = "left";
+                    console.log(vx);
+                    
                     break;
                 
                 case 38:
@@ -205,6 +213,7 @@ class game {
                 case 68:
                     // console.log("Right");
                     this.movePanda(0, 1);
+                    vx = "right";
                     break;
 
                 case 40:
@@ -212,6 +221,13 @@ class game {
                     // console.log("Bottom");
                     this.movePanda(1, 0);
                     break;
+                // chữ s
+                case 82:
+                    this.setLocalStorage("level", 0, 7);
+                    this.setLocalStorage("score", 0, 7);
+                    window.location.reload();
+                    break;
+                    
             }
         })
     }
@@ -283,8 +299,8 @@ class game {
     }
 
     drawScore() {
-        this.context.font = this.getWidth() / 1.5 + 'px Arial Black';
-        this.context.fillStyle = "#FF00CC";
+        this.context.font = this.getWidth() / 1.5 + 'px NVN8pt';
+        this.context.fillStyle = "white";
         this.context.fillText("Level: " + (Math.floor(level + 1)) + " / " + data.length + "     Score: " + score + " + " + Score2, this.getWidth(), this.getWidth());
         this.context.drawImage(reload_Im, game_W - 1.5 * this.getWidth(), 0.2 * this.getWidth(), this.getWidth(), this.getWidth());
     }
@@ -292,8 +308,15 @@ class game {
     drawMatrix(){
         for (let i = 0; i < M; i++) 
             for (let j = 0; j < N; j++)
-                if (A[i][j] != 9)
+                if (A[i][j] != 9) {
+                    if ((A[i][j] == 5 || A[i][j] == 6) && vx != "right") {
+                        // honrizontal
+                        this.context.drawImage(im[A[i][j] + 2], XX + j * size, YY + i * size, size + 1, size + 1);
+
+                    }
+                    else
                     this.context.drawImage(im[A[i][j]], XX + j * size, YY + i * size, size + 1, size + 1);
+                }
     }
 
     clearScreen() {
@@ -313,28 +336,15 @@ class game {
         return true;
     }
 
-    getCookie(cname) {
-        let name = cname + "=";
-        let decodedCookie = decodeURIComponent(document.cookie);
-        let ca = decodedCookie.split(';');
-        for(let i = 0; i <ca.length; i++) {
-            let c = ca[i];
-            while (c.charAt(0) == ' ') {
-                c = c.substring(1);
-            }
-            if (c.indexOf(name) == 0) {
-                return c.substring(name.length, c.length);
-            }
-        }
-        return "";
+    getLocalStorage(cname) {
+        return localStorage.getItem(cname);
     }
 
-    setCookie(cname, cvalue, exdays) {
-        const d = new Date();
-        d.setTime(d.getTime() + (exdays*24*60*60*1000));
-        let expires = "expires="+ d.toUTCString();
-        document.cookie = cname + "=" + cvalue + ";" + expires + ";path=/";
+    setLocalStorage(cname, cvalue) {
+        localStorage.setItem(cname, cvalue);
     }
+
+    
 }
 
 var g = new game();
